@@ -1,14 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import VuexPersist from "vuex-persist";
 import axios from "axios";
 
 Vue.use(Vuex);
-
-const vuexPersist = new VuexPersist({
-  key: "project-template",
-  storage: window.localStorage
-});
 
 export const mutations = {
   login: function(state) {
@@ -18,18 +12,29 @@ export const mutations = {
     state.loginState = { ...state.loginState, loggedIn: false };
   },
   addToDo(state, todo) {
-    state.todos = [
-      ...state.todos,
-      { ...todo, done: false, id: state.todos.length + 1 }
-    ];
+    state.todoIdx = state.todoIdx + 1;
+    state.todos = [...state.todos, { ...todo, done: false, id: state.todoIdx }];
+  },
+  updateToDo(state, todo) {
+    state.todos = state.todos.map(td => (td.id === todo.id ? todo : td));
+  },
+  deleteToDo(state, todo) {
+    state.todos = state.todos.filter(td => td.id !== todo.id);
+  },
+  todosLoaded(state, todos) {
+    state.todos = todos;
+  },
+  categoriesLoaded(state, categories) {
+    state.categories = categories;
   }
 };
 
 export const actions = {
-  login: function({ commit }, payload) {
+  login: function({ commit, dispatch }, payload) {
     const { email, password } = payload;
     return axios.post("/api/login", { email, password }).then(() => {
       commit("login");
+      return dispatch("loadToDos").then(dispatch("loadCategories"));
     });
   },
   logout: function({ commit }) {
@@ -38,18 +43,45 @@ export const actions = {
     });
   },
   addToDo({ commit }, toDo) {
-    debugger;
-    commit("addToDo", toDo);
+    return axios.post("/api/todos", toDo).then(response => {
+      commit("addToDo", response.data);
+    });
+  },
+  updateTodo({ commit }, toDo) {
+    return axios.put(`/api/todos/${toDo.id}`, toDo).then(response => {
+      commit("updateToDo", response.data);
+    });
+  },
+  deleteTodo({ commit }, toDo) {
+    return axios.delete(`/api/todos/${toDo.id}`).then(() => {
+      commit("deleteToDo", toDo);
+    });
+  },
+  loadToDos({ commit }) {
+    return axios.get("/api/todos").then(response => {
+      commit("todosLoaded", response.data);
+    });
+  },
+  loadCategories({ commit }) {
+    return axios.get("/api/categories").then(response => {
+      commit("categoriesLoaded", response.data);
+    });
+  },
+  checkLoggedIn({ commit }) {
+    return axios.get("/api/checkLogin").then(() => {
+      commit("login");
+    });
   }
 };
 
 export default new Vuex.Store({
-  plugins: [vuexPersist.plugin],
   state: {
     todos: [],
+    categories: [],
     loginState: {
       loggedIn: false
-    }
+    },
+    todoIdx: 0
   },
   mutations,
   actions

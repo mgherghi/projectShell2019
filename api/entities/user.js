@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+} from 'typeorm';
+import ToDo from './todo';
+import Category from './category';
 
 @Entity()
 export default class User {
@@ -10,4 +17,10 @@ export default class User {
 
   @Column({ type: 'varchar', nullable: false })
   password
+
+  @OneToMany(() => ToDo, (todo) => todo.user, { eager: true })
+  todos
+
+  @OneToMany(() => Category, (category) => category.user)
+  categories
 }

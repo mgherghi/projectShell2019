@@ -1,9 +1,12 @@
 <template>
-  <div class="todo">
-    <b-checkbox v-model="todo.done" />
-    <span class="todo-title">
+  <div class="todo columns">
+    <b-checkbox v-model="todo.done" v-on:input="handleCheck" />
+    <span class="todo-title column">
       {{ todo.title }}
+
+      <b-tag rounded>{{ todo.category.name }}</b-tag>
     </span>
+    <b-button v-on:click="handleDelete">Delete</b-button>
   </div>
 </template>
 
@@ -16,6 +19,14 @@ export default {
       default: () => {
         return {};
       }
+    }
+  },
+  methods: {
+    handleCheck: function(value) {
+      this.$store.dispatch("updateTodo", { ...this.todo, done: value });
+    },
+    handleDelete: function() {
+      this.$store.dispatch("deleteTodo", this.todo);
     }
   }
 };
