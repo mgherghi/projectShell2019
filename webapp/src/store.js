@@ -23,6 +23,9 @@ export const mutations = {
   },
   todosLoaded(state, todos) {
     state.todos = todos;
+  },
+  categoriesLoaded(state, categories) {
+    state.categories = categories;
   }
 };
 
@@ -31,7 +34,7 @@ export const actions = {
     const { email, password } = payload;
     return axios.post("/api/login", { email, password }).then(() => {
       commit("login");
-      return dispatch("loadTodos");
+      return dispatch("loadToDos").then(dispatch("loadCategories"));
     });
   },
   logout: function({ commit }) {
@@ -59,6 +62,11 @@ export const actions = {
       commit("todosLoaded", response.data);
     });
   },
+  loadCategories({ commit }) {
+    return axios.get("/api/categories").then(response => {
+      commit("categoriesLoaded", response.data);
+    });
+  },
   checkLoggedIn({ commit }) {
     return axios.get("/api/checkLogin").then(() => {
       commit("login");
@@ -69,6 +77,7 @@ export const actions = {
 export default new Vuex.Store({
   state: {
     todos: [],
+    categories: [],
     loginState: {
       loggedIn: false
     },
